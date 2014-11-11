@@ -106,9 +106,9 @@ class AqicnUploader:
 
 	def post(self,values):
 		try:
-			idat1= dict( value=value, type='shinyei-pdp42ns-1u', unit='lpo' )
-			idat2= dict( value=value, type='shinyei-pdp42ns-2.5u', unit='lpo' )
-			params = urllib.urlencode(dict(postdata=dict( id=self.id, time=datetime.now().isoformat(), data = [idat1,idat2])))
+			idat1= dict( value=values[0], type='shinyei-pdp42ns-1u', unit='lpo', time=datetime.now().isoformat() )
+			idat2= dict( value=values[1], type='shinyei-pdp42ns-2.5u', unit='lpo', time=datetime.now().isoformat() )
+			params = urllib.urlencode(dict(postdata=dict( id=self.id, data = [idat1,idat2])))
 			headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 			conn = httplib.HTTPConnection("sensor.aqicn.org")
 			conn.request("POST", "/sensor/upload/", params, headers)
@@ -118,12 +118,29 @@ class AqicnUploader:
 			conn.close()
 			data= json.loads(data)
 			print("Sever says "+str(data))
-			return data["result"] == "ok"
+			if data["result"] != "ok":
+				self.postponne([idat1,idat2])
 
 		except ValueError:  # includes simplejson.decoder.JSONDecodeError
 			print("Data decoding error for "+data)
 			return 0
 
+
+	def postponne(self,values):
+		filename = '/tmp/upload.shinyei.pending.json'
+
+		obj = []
+		if os.path.isfile(filename):
+			try:
+				with open(filename,'rb') as f:
+				    obj = pickle.load(f)
+			except EOFError:
+				print("pickle error")
+				
+	    obj += values
+
+		with open(filename, 'wb') as f:
+		    pickle.dump(obj, f)
 
 def loop():
 	reader = ShinyeiLpoReader("gpio7","gpio6")
