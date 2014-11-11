@@ -16,6 +16,7 @@ class LpoReader:
 		self.ltime = 0
 		self.lvalue = -1
 		self.lpotime = [0,0]
+		self.count = 0
 
 	def read( self, value ):
 
@@ -23,13 +24,26 @@ class LpoReader:
 			t = time.time()
 			if self.ltime!=0:
 				dtime = t-self.ltime
-				self.lpotime[value] += dtime
+				self.lpotime[self.lvalue] += dtime
 			self.ltime=t
 			self.lvalue = value
+			if value==0:
+				self.count += 1
+
+	def getcount( self ):
+		return self.count
 
 	def ratio( self ):
-		low = self.lpotime[1]
-		high = self.lpotime[0]
+		low  = self.lpotime[0]
+		high = self.lpotime[1]
+
+		if self.ltime!=0:
+			dt = time.time()-self.ltime
+			if self.lvalue==0:
+				low += dt
+			else:
+				high += dt
+
 		if (low+high!=0):
 			ratio = float(low) / (low+high)
 		else:
@@ -80,7 +94,7 @@ class ShinyeiLpoReader:
 				lasttime = ctime
 				ratio1 = round(self.lpo1.ratio()*10000)/100
 				ratio2 = round(self.lpo2.ratio()*10000)/100
-				print ("{0}: {1} {2}".format(time.strftime("%H:%M:%S"),ratio1,ratio2))
+				print ("{0}: {1}({3}) {2}({4})".format(time.strftime("%H:%M:%S"),ratio1,ratio2,self.lpo1.getcount(),self.lpo2.getcount()))
 
 		return [self.lpo1.ratio(),self.lpo2.ratio()]
 
