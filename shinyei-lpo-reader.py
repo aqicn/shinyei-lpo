@@ -99,11 +99,11 @@ class AqicnUploader:
 			conn = httplib.HTTPConnection("sensor.aqicn.org")
 			conn.request("POST", "/sensor/upload/", params, headers)
 			response = conn.getresponse()
-			print("Posting "+str(idata)+" -> {0} {1} ".format(response.status, response.reason))
+			print("Posting "+str(idat1)+" "+str(idat2)+" -> {0} {1} ".format(response.status, response.reason))
 			data = response.read()
 			conn.close()
 			data= json.loads(data)
-			print(data)
+			print("Sever says "+str(data))
 			return data["result"] == "ok"
 
 		except ValueError:  # includes simplejson.decoder.JSONDecodeError
